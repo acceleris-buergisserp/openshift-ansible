@@ -3,6 +3,10 @@
     msg: "This role is only supported for Red Hat hosts"
   when: ansible_distribution != 'RedHat'
 
+- include_tasks: satellite.yml
+  when:
+    - rhsub_server is defined
+
 - name: Install Red Hat Subscription manager
   yum:
     name: subscription-manager
@@ -15,7 +19,7 @@
   register: rh_subscribed
   changed_when: False
 
-- name: Register host
+- name: Register host with username and password
   redhat_subscription:
     username: "{{ rhsub_user }}"
     password: "{{ rhsub_pass }}"
@@ -23,6 +27,19 @@
   until: rh_subscription is succeeded
   when:
     - "'not registered' in rh_subscribed.stdout"
+    - rhsub_user is defined
+    - rhsub_pass is defined
+
+- name: Register host with activation key
+  redhat_subscription:
+    org_id: "{{ rhsub_org_id }}"
+    activationkey: "{{ rhsub_activationkey }}"
+  register: rh_subscription
+  until: rh_subscription is succeeded
+  when:
+    - "'not registered' in rh_subscribed.stdout"
+    - rhsub_org_id is defined
+    - rhsub_activationkey is defined
 
 - fail:
     msg: 'Unable to register host with Red Hat Subscription Manager'
@@ -42,7 +59,3 @@
   changed_when: "'Successfully attached a subscription' in openshift_pool_attached.stdout"
   when: rhsub_pool not in openshift_pool_attached.stdout
 
-- import_tasks: satellite.yml
-  when:
-    - rhsub_server is defined
-    - rhsub_server
