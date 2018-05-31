@@ -51,8 +51,7 @@
       name: rhel_subscribe
     when:
     - ansible_distribution == "RedHat"
-    - rhsub_user is defined
-    - rhsub_pass is defined
+    - (rhsub_user is defined and rhsub_pass is defined) or (rhsub_activationkey is defined and rhsub_org_id is defined)
 
 - name: Show information about the deployed cluster
   import_playbook: cluster-info.yml
